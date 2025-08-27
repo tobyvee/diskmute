@@ -1,0 +1,14 @@
+.PHONY: test install install-bats clean
+
+test: install-bats
+	bats diskmute_test.bats
+
+install:
+	cp diskmute.sh /usr/local/bin/diskmute
+	chmod +x /usr/local/bin/diskmute
+
+install-bats:
+	@which bats > /dev/null || (echo "Installing bats..." && brew install bats-core)
+
+clean:
+	rm -rf /tmp/test_volume

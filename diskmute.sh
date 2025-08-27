@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ░█▀▄░▀█▀░█▀▀░█░█░█▄█░█░█░▀█▀░█▀▀
 # ░█░█░░█░░▀▀█░█▀▄░█░█░█░█░░█░░█▀▀
@@ -39,7 +39,9 @@
 
 set -euo pipefail
 
-VERSION=0.0.1
+VERSION=1.0.0
+DRY_RUN=false
+VOLUME=""
 
 function usage {
   echo ""
@@ -48,6 +50,7 @@ function usage {
   echo "Options:"
   echo "  -h, --help      Show this help message and exit"
   echo "  -v, --version   Show version number and exit"
+  echo "  -d, --dry-run   Show files to be modified and exit without making changes."
   echo ""
   echo "Example: sudo $0 /Volumes/MyDisk"
   echo ""
@@ -59,16 +62,18 @@ function version {
   exit 0
 }
 
-function check_args {
-  if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
-    usage
-  fi
-  if [ "$1" == "-v" ] || [ "$1" == "--version" ]; then
-    version
-  fi
-  if [ -n "$1" ]; then
-    usage
-  fi
+function parse_args {
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -h|--help) usage ;;
+      -v|--version) version ;;
+      -d|--dry-run) DRY_RUN=true ;;
+      -*) fatal "Unknown option: $1" ;;
+      *) VOLUME="$1" ;;
+    esac
+    shift
+  done
+  [ -z "$VOLUME" ] && fatal "No volume specified."
 }
 
 function fatal {
@@ -84,22 +89,22 @@ function is_darwin {
 }
 
 function stop_stupidity {
-  if echo "$1" | grep "System" >/dev/null; then
+  if echo "$VOLUME" | grep "System" >/dev/null; then
     fatal "ERROR: Cannot run on a system volume. Exiting..."
   fi
-  if echo "$1" | grep "Recovery" >/dev/null; then
+  if echo "$VOLUME" | grep "Recovery" >/dev/null; then
     fatal "ERROR: Cannot run on a recovery volume. Exiting..."
   fi
-  if echo "$1" | grep "Library" >/dev/null; then
+  if echo "$VOLUME" | grep "Library" >/dev/null; then
     fatal "ERROR: Cannot run on a simulator volume. Exiting..."
   fi
-  if [ "$1" == "/" ]; then
+  if [ "$VOLUME" = "/" ]; then
     fatal "ERROR: Cannot run on the root volume. Exiting..."
   fi
-  if echo "$1" | grep "~" >/dev/null; then
+  if echo "$VOLUME" | grep "~" >/dev/null; then
     fatal "ERROR: Cannot run on a home volume. Exiting..."
   fi
-  if [ "$1" == "/Volumes" ]; then
+  if [ "$VOLUME" = "/Volumes" ]; then
     fatal "ERROR: Cannot run on the volumes root. Exiting..."
   fi
 }
@@ -114,7 +119,7 @@ function banner {
 
 function warning_message {
   echo -e "\033[0;31mWARNING:\033[0m"
-  echo -e "This script will turn off all indexing and remove all metadata on drive $1"
+  echo -e "This script will turn off all indexing and remove all metadata on drive $VOLUME"
   echo -e "This is destructive and if used on the wrong drive, it can cause data loss"
   echo -e ""
   echo -e "DO NOT USE THIS ON YOUR SYSTEM VOLUME."
@@ -133,95 +138,92 @@ function consent {
 
 function check_root {
   if [ "$(id -u)" != "0" ]; then
-    echo "ERROR: This script must be run as root. Exiting..."
-    exit 1
+    fatal "ERROR: This script must be run as root. Exiting..."
   fi
 }
 
 function check_volume {
-  if mount | grep "$1"; then
-    cd "$1" || exit 1
+  if mount | grep "$VOLUME"; then
+    cd "$VOLUME" || exit 1
   else
-    echo "Volume not mounted. Exiting..."
-    exit 1
+    fatal "Volume not mounted. Exiting..."
   fi
 }
 
 function remove_files_dry_run {
   echo ""
   echo "The following files will be removed:"
-  find "$1" -name ".DS_Store" || true
-  find "$1" -name '._*' || true
-  find "$1" -name ".Spotlight-V100" || true
-  find "$1" -name ".Trashes" || true
-  find "$1" -name ".fseventsd" || true
-  find "$1" -name ".TemporaryItems" || true
-  find "$1" -name ".VolumeIcon.icns" || true
-  find "$1" -name ".com.apple.timemachine.supported" || true
-  find "$1" -name ".com.apple.timemachine.donotpresent" || true
-  find "$1" -name ".AppleDB" || true
-  find "$1" -name ".AppleDesktop" || true
-  find "$1" -name ".apdisk" || true
-  find "$1" -name ".DocumentRevisions-V100" || true
+  find "$VOLUME" -name ".DS_Store" || true
+  find "$VOLUME" -name '._*' || true
+  find "$VOLUME" -name ".Spotlight-V100" || true
+  find "$VOLUME" -name ".Trashes" || true
+  find "$VOLUME" -name ".fseventsd" || true
+  find "$VOLUME" -name ".TemporaryItems" || true
+  find "$VOLUME" -name ".VolumeIcon.icns" || true
+  find "$VOLUME" -name ".com.apple.timemachine.supported" || true
+  find "$VOLUME" -name ".com.apple.timemachine.donotpresent" || true
+  find "$VOLUME" -name ".AppleDB" || true
+  find "$VOLUME" -name ".AppleDesktop" || true
+  find "$VOLUME" -name ".apdisk" || true
+  find "$VOLUME" -name ".DocumentRevisions-V100" || true
   echo ""
 }
 
 function disable_timemachine {
   echo "Disabling Time Machine..."
-  sudo tmutil addexclusion -v "$1" || fatal "Failed to disable Time Machine"
-  sudo tmutil isexcluded "$1" || fatal "Failed to disable Time Machine"
+  sudo tmutil addexclusion -v "$VOLUME" || fatal "Failed to disable Time Machine"
+  sudo tmutil isexcluded "$VOLUME" || fatal "Failed to disable Time Machine"
 }
 
 function disable_spotlight {
   echo "Disabling Spotlight..."
-  sudo mdutil -i off -dE -V "$1" || fatal "Failed to disable Spotlight"
+  sudo mdutil -i off -dE -V "$VOLUME" || fatal "Failed to disable Spotlight"
   sudo mdutil -s || fatal "Failed to disable Spotlight"
 }
 
 function create_noindex {
-  touch "$1"/.metadata_never_index || fatal "Failed to create .metadata_never_index"
-  mkdir "$1"/.fseventsd || fatal "Failed to create .fseventsd"
-  touch "$1"/.fseventsd/no_log || fatal "Failed to create .fseventsd/no_log"
-  touch "$1"/.Trashes || fatal "Failed to create .Trashes"
+  touch "$VOLUME"/.metadata_never_index || fatal "Failed to create .metadata_never_index"
+  mkdir "$VOLUME"/.fseventsd || fatal "Failed to create .fseventsd"
+  touch "$VOLUME"/.fseventsd/no_log || fatal "Failed to create .fseventsd/no_log"
+  touch "$VOLUME"/.Trashes || fatal "Failed to create .Trashes"
 }
 
 # function remove_files {
-#   find "$1" -name ".DS_Store" -delete || fatal "Failed to remove .DS_Store"
-#   find "$1" -name "._*" -delete || fatal "Failed to remove ._"
-#   find "$1" -name ".Spotlight-V100" -delete || fatal "Failed to remove .Spotlight-V100"
-#   find "$1" -name ".Trashes" -delete || fatal "Failed to remove .Trashes"
-#   find "$1" -name ".fseventsd" -delete || fatal "Failed to remove .fseventsd"
-#   find "$1" -name ".TemporaryItems" -delete || fatal "Failed to remove .TemporaryItems"
-#   find "$1" -name ".VolumeIcon.icns" -delete || fatal "Failed to remove .VolumeIcon.icns"
-#   find "$1" -name ".com.apple.timemachine.supported" -delete || fatal "Failed to remove .com.apple.timemachine.supported"
-#   find "$1" -name ".com.apple.timemachine.donotpresent" -delete || fatal "Failed to remove .com.apple.timemachine.donotpresent"
-#   find "$1" -name ".AppleDB" -delete || fatal "Failed to remove .AppleDB"
-#   find "$1" -name ".AppleDesktop" -delete || fatal "Failed to remove .AppleDesktop"
-#   find "$1" -name ".apdisk" -delete || fatal "Failed to remove .apdisk"
-#   find "$1" -name ".DocumentRevisions-V100" -delete || fatal "Failed to remove .DocumentRevisions-V100"
+#   find "$VOLUME" -name ".DS_Store" -delete || fatal "Failed to remove .DS_Store"
+#   find "$VOLUME" -name "._*" -delete || fatal "Failed to remove ._"
+#   find "$VOLUME" -name ".Spotlight-V100" -delete || fatal "Failed to remove .Spotlight-V100"
+#   find "$VOLUME" -name ".Trashes" -delete || fatal "Failed to remove .Trashes"
+#   find "$VOLUME" -name ".fseventsd" -delete || fatal "Failed to remove .fseventsd"
+#   find "$VOLUME" -name ".TemporaryItems" -delete || fatal "Failed to remove .TemporaryItems"
+#   find "$VOLUME" -name ".VolumeIcon.icns" -delete || fatal "Failed to remove .VolumeIcon.icns"
+#   find "$VOLUME" -name ".com.apple.timemachine.supported" -delete || fatal "Failed to remove .com.apple.timemachine.supported"
+#   find "$VOLUME" -name ".com.apple.timemachine.donotpresent" -delete || fatal "Failed to remove .com.apple.timemachine.donotpresent"
+#   find "$VOLUME" -name ".AppleDB" -delete || fatal "Failed to remove .AppleDB"
+#   find "$VOLUME" -name ".AppleDesktop" -delete || fatal "Failed to remove .AppleDesktop"
+#   find "$VOLUME" -name ".apdisk" -delete || fatal "Failed to remove .apdisk"
+#   find "$VOLUME" -name ".DocumentRevisions-V100" -delete || fatal "Failed to remove .DocumentRevisions-V100"
 # }
 
 function main {
   is_darwin
-  if [ "$#" -eq 0 ]; then
-    fatal "No arguments specified."
-  fi
-  check_args "$1"
+  parse_args "$@"
   banner
   check_root
-  check_volume "$1"
-  warning_message "$1"
+  check_volume "$VOLUME"
+  warning_message "$VOLUME"
   consent
-  stop_stupidity "$1"
-  remove_files_dry_run "$1"
-  consent
-  disable_spotlight "$1"
-  disable_timemachine "$1"
-  create_noindex "$1"
-
-  # turn_off_spotlight "$1"
-  # remove_files "$1"
-  # create_noindex "$1"
+  stop_stupidity "$VOLUME"
+  remove_files_dry_run "$VOLUME"
+  if [ "$DRY_RUN" = false ]; then
+    echo "RUNNING FOR REALZ"
+    exit 0
+    # consent
+    # disable_spotlight "$VOLUME"
+    # disable_timemachine "$VOLUME"
+    # create_noindex "$VOLUME"
+    # remove_files "$VOLUME"
+  fi
+  exit 0
 }
 
 main "$@"
