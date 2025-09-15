@@ -1,4 +1,4 @@
-# DiskMute
+# DiskMute(1)
 
 DiskMute is a command line tool to remove or hide system files and directories on a disk volume mounted in Mac OS X. This tool is useful for creating a clean disk volume for backup or sharing purposes.
 
