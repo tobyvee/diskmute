@@ -54,31 +54,31 @@ teardown() {
 }
 
 @test "prevents running on system volume" {
-    run bash -c "source $SCRIPT_PATH; stop_stupidity '/System/Library'"
+    run bash -c "set -euo pipefail; source $SCRIPT_PATH; path_blacklist '/System/Library'"
     [ "$status" -eq 1 ]
     [[ "$output" == *"Cannot run on a system volume"* ]]
 }
 
 @test "prevents running on recovery volume" {
-    run bash -c "source $SCRIPT_PATH; stop_stupidity '/Volumes/Recovery'"
+    run bash -c "source $SCRIPT_PATH; path_blacklist '/Volumes/Recovery'"
     [ "$status" -eq 1 ]
     [[ "$output" == *"Cannot run on a recovery volume"* ]]
 }
 
 @test "prevents running on root volume" {
-    run bash -c "source $SCRIPT_PATH; stop_stupidity '/'"
+    run bash -c "source $SCRIPT_PATH; path_blacklist '/'"
     [ "$status" -eq 1 ]
     [[ "$output" == *"Cannot run on the root volume"* ]]
 }
 
 @test "prevents running on home volume" {
-    run bash -c "source $SCRIPT_PATH; stop_stupidity '~/Documents'"
+    run bash -c "source $SCRIPT_PATH; path_blacklist '~/Documents'"
     [ "$status" -eq 1 ]
     [[ "$output" == *"Cannot run on a home volume"* ]]
 }
 
 @test "prevents running on volumes root" {
-    run bash -c "source $SCRIPT_PATH; stop_stupidity '/Volumes'"
+    run bash -c "source $SCRIPT_PATH; path_blacklist '/Volumes'"
     [ "$status" -eq 1 ]
     [[ "$output" == *"Cannot run on the volumes root"* ]]
 }

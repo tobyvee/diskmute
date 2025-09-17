@@ -76,3 +76,9 @@ Tests are written using the [bats testing framework](https://github.com/bats-cor
 ```bash
 make test
 ```
+
+## Notes & resources
+
+### Logging
+
+This script does not write any logs to the system, however it's usage will be recorded in your shell history.

@@ -11,5 +11,9 @@ class Diskmute < Formula
 
   test do
     system "#{bin}/diskmute", "--version"
+    system "#{bin}/diskmute", "--help"
+    
+    # Test that it fails appropriately without root
+    assert_match "This script must be run as root", shell_output("#{bin}/diskmute /tmp 2>&1", 1)
   end
 end
