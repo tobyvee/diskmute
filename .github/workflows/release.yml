@@ -39,8 +39,8 @@ jobs:
           sed -i "s|sha256 \".*\"|sha256 \"${{ steps.release.outputs.sha256 }}\"|" diskmute.rb
       - name: Commit formula
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "${{ github.actor }}""
+          git config --local user.name "${{ github.actor }}""
           git add diskmute.rb
           git commit -m "Update formula for ${{ steps.release.outputs.tag }}"
           git push origin HEAD:main
