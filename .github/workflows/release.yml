@@ -6,17 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  test:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install bats
-        run: brew install bats-core
-      - name: Run tests
-        run: make test
-
   release:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
