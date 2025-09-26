@@ -17,6 +17,7 @@ jobs:
         with:
           files: diskmute.sh
           generate_release_notes: true
+          token: ${{ secrets.TOKEN }}
 
   update-formula:
     needs: release
