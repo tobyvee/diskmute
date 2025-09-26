@@ -43,4 +43,4 @@ jobs:
           git config --local user.name "GitHub Action"
           git add diskmute.rb
           git commit -m "Update formula for ${{ steps.release.outputs.tag }}"
-          git push
+          git push origin HEAD:main
