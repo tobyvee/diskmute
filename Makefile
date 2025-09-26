@@ -1,7 +1,7 @@
 .PHONY: test install install-bats clean
 
 test: install-bats
-	bats -p --verbose-run diskmute_test.bats
+	sudo bats -p --verbose-run diskmute_test.bats
 
 install:
 	cp diskmute.sh /usr/local/bin/diskmute

@@ -1,4 +1,4 @@
-# DiskMute(1)
+# diskmute(1)
 
 ```bash
 ░█▀▄░▀█▀░█▀▀░█░█░█▄█░█░█░▀█▀░█▀▀
@@ -16,6 +16,7 @@ Example: diskmute /Volumes/MyDisk
 Options:
   -h, --help      Show this help message and exit
   -v, --version   Show version number and exit
+  -d, --dry-run   Show files to be modified and exit without making changes
 ```
 
 ## Information

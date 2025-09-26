@@ -51,7 +51,7 @@ function usage {
   echo "Options:"
   echo "  -h, --help      Show this help message and exit"
   echo "  -v, --version   Show version number and exit"
-  echo "  -d, --dry-run   Show files to be modified and exit without making changes. Default true."
+  echo "  -d, --dry-run   Show files to be modified and exit without making changes"
   echo ""
   echo "Example: sudo $0 /Volumes/MyDisk"
   echo ""
