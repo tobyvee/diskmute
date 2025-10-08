@@ -4,7 +4,7 @@
 # ░█░█░░█░░▀▀█░█▀▄░█░█░█░█░░█░░█▀▀
 # ░▀▀░░▀▀▀░▀▀▀░▀░▀░▀░▀░▀▀▀░░▀░░▀▀▀
 
-# DiskMute - version 0.0.1
+# DiskMute - version 1.0.0
 # Usage: diskmute <volume>
 # Example: diskmute /Volumes/MyDisk
 # Options:

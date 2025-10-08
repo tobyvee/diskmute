@@ -55,20 +55,10 @@ The author is not responsible for any loss of data, financial loss or damage to 
 
 ## Installation
 
-### Homebrew
-
-```bash
-brew install diskmute
-```
-
 ### From source
 
-1. Clone this repo.
-2. Run the following command:
-
-```bash
-make install
-```
+1. Clone this repository
+2. Run `chmod +x ./diskmute.sh` to make the script executable
 
 ## Tests
 
