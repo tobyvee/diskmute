@@ -60,6 +60,15 @@ The author is not responsible for any loss of data, financial loss or damage to 
 1. Clone this repository
 2. Run `chmod +x ./diskmute.sh` to make the script executable
 
+### Homebrew
+
+`diskmute` can be installed via Homebrew on MacOS.
+
+```bash
+brew tap tobyvee/tap
+brew install diskmute
+```
+
 ## Tests
 
 Tests are written using the [bats testing framework](https://github.com/bats-core/bats-core). To test, run the following command:
